@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>log_093</title>
+<style>
+  /* Стиль и запрет на выделение */
+  * {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+  }
+  body {
+    background: #fff;
+    color: #000;
+    font-family: "Times New Roman", Times, serif;
+    font-size: 18px;
+    line-height: 1.8;
+    max-width: 600px;
+    margin: 40px auto;
+    padding: 20px;
+    position: relative;
+    z-index: 1;
+    transition: color 1s ease;
+  }
+
+  /* Фон-паттерн */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image: url("a0667815bb982ae0507a79977940e8c0.gif");
+    background-repeat: repeat;
+    background-size: 200px 200px;
+    opacity: 0.05;
+    filter: grayscale(1);
+    z-index: -2;
+    pointer-events: none;
+    transition: opacity 2s ease, filter 2s ease;
+  }
+
+  /* Виньетка */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 20%, rgba(0,0,0,0.95) 100%);
+    opacity: 0;
+    z-index: -1;
+    pointer-events: none;
+    transition: opacity 2s ease;
+  }
+
+  body.quest-active { color: #999; }
+  body.quest-active::before {
+    opacity: 0.35;
+    filter: contrast(1.5) brightness(0.6) hue-rotate(-15deg);
+  }
+  body.quest-active::after { opacity: 1; }
+
+  /* Стили текста */
+  p { margin-bottom: 1.5em; pointer-events: none; }
+  .dim { color: #888; font-size: 0.9em; }
+  .gap { height: 250px; } 
+  
+  /* Скрытые фрагменты */
+  .fragment {
+    color: transparent;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 1.2em;
+    transition: color 0.5s;
+  }
+  .fragment.revealed { color: #cc0000; }
+
+  /* Кнопка старта */
+  #startBtn {
+    display: block;
+    font-family: inherit;
+    font-size: 18px;
+    padding: 10px 20px;
+    background: #fff;
+    border: 1px solid #000;
+    color: #000;
+    cursor: pointer;
+    margin: 40px auto;
+  }
+  #startBtn:hover { background: #eee; }
+  body.quest-active #startBtn { display: none; }
+
+  /* Глаза */
+  .eye {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background-image: url("bob-eye-horror-evil.gif");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    cursor: pointer;
+    z-index: 10;
+    opacity: 0;
+    filter: drop-shadow(0 0 5px #ff0000);
+    animation: eyeAppear 1s forwards;
+  }
+  .eye:hover { transform: scale(1.3); }
+  
+  /* Настоящий найденный глаз */
+  .eye.found {
+    pointer-events: none;
+    filter: drop-shadow(0 0 30px #fff) brightness(2);
+    opacity: 0;
+    transition: all 0.5s;
+  }
+  
+  /* Фальшивый глаз (при клике) */
+  .eye.fake {
+    filter: drop-shadow(0 0 20px #00ff00) hue-rotate(90deg);
+    transform: scale(1.5);
+  }
+
+  @keyframes eyeAppear {
+    from { opacity: 0; transform: scale(0.5); }
+    to { opacity: 0.6; transform: scale(1); }
+  }
+
+  /* HUD */
+  #hud {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    font-family: monospace;
+    font-size: 14px;
+    color: #fff;
+    background: #000;
+    padding: 15px;
+    display: none;
+    z-index: 200;
+    text-align: right;
+    border: 1px solid #333;
+    line-height: 1.5;
+  }
+  body.quest-active #hud { display: block; }
+  
+  #hud .lives { color: #ff0000; font-weight: bold; font-size: 18px; }
+  #hud .timer { color: #fff; font-weight: bold; font-size: 18px; }
+  
+  .cipher-input {
+    background: #222;
+    color: #fff;
+    border: 1px solid #555;
+    font-family: monospace;
+    width: 40px;
+    text-align: center;
+    margin-left: 5px;
+  }
+
+  /* Форма */
+  #codeForm {
+    display: none;
+    margin-top: 40px;
+    text-align: center;
+    padding-bottom: 100px;
+  }
+  .input-group { margin-bottom: 15px; }
+  #codeForm input {
+    font-family: monospace;
+    font-size: 20px;
+    padding: 5px;
+    border: 1px solid #000;
+    background: #fff;
+    text-transform: uppercase;
+    text-align: center;
+    width: 60px;
+    margin: 0 5px;
+  }
+  body.quest-active #codeForm input {
+    background: #111;
+    color: #fff;
+    border-color: #555;
+  }
+  #codeForm button {
+    font-family: inherit;
+    font-size: 16px;
+    padding: 8px 20px;
+    background: #000;
+    color: #fff;
+    border: 1px solid #000;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  #codeForm button:hover { background: #333; }
+  
+  #errorMsg {
+    color: #ff0000;
+    margin-top: 15px;
+    font-size: 16px;
+    display: none;
+    font-family: monospace;
+    font-weight: bold;
+  }
+
+  /* Финал */
+  #finalLink {
+    display: none;
+    margin-top: 40px;
+    text-align: center;
+    padding-bottom: 100px;
+  }
+  #finalLink a {
+    color: #0000ee;
+    text-decoration: underline;
+    font-size: 20px;
+  }
+
+  /* Смерть */
+  #deathScreen {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    color: #ff0000;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    font-family: monospace;
+    text-align: center;
+  }
+  #deathScreen h1 { font-size: 40px; margin-bottom: 20px; }
+  #deathScreen a { color: #fff; text-decoration: underline; cursor: pointer; font-size: 18px; margin-top: 30px; }
+  
+  #copyWarning {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: #000;
+    color: #ff0000;
+    padding: 20px 40px;
+    border: 2px solid #ff0000;
+    font-family: monospace;
+    font-size: 20px;
+    z-index: 9999;
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<div id="story">
+  <p>i don't remember when it started. maybe it was 2009, maybe later. time gets weird when you don't sleep. i used to think time was a straight line. now it feels like a circle, and i'm just going around and around, seeing the same things over and over.</p>
+
+  <p>at first i thought it was just a bug. my old pc kept freezing. i blamed the graphics card, then the ram, then windows itself. i reinstalled the system three times. every time i did, the file was there. same size. same date. same name.</p>
+
+  <p class="dim">(the file won't delete. i tried. i tried many times. i tried formatting the drive. i tried taking the drive out and hitting it with a hammer. when i put it back in, the file was there.)</p>
+
+  <p>it was on a burned disc i got at a flea market back in 2009. the label said "game - do not copy". but there was no game on it. just one file called nohope.avi.</p>
+
+  <p>i watched it once. it's just a picture. no movement. no menu. but there's a sound. it's like someone trying to laugh but they forgot how. like they heard a laugh once, years ago, and they're trying to remember what it sounded like.</p>
+  
+  <p>i watched it until the end. i don't know why. maybe i thought something would happen. nothing happened. the video stopped. the screen went black. i sat there for a while.</p>
+
+  <div class="gap"></div>
+
+  <p>then i noticed something else. in the corner of the screen, there was a folder i didn't remember. i opened it. it was empty. except for one thing. a single image file. an eye. looking at me.</p>
+
+  <p class="dim">(it was blinking. images don't blink.)</p>
+
+  <p>i closed it. i tried to sleep. when i woke up, there were more. scattered across my desktop. i tried to drag them to the trash. they moved away from my cursor. i tried to delete them through the command line. access denied.</p>
+
+  <p>i tried to disconnect the internet. they were still there. i tried to unplug the monitor. i could still feel them looking at me in the dark.</p>
+  
+  <div class="gap"></div>
+  
+  <p>the next day, i went to work. i opened my office computer. there was a file on the desktop. nohope.avi. i had never put it there. i had never connected that disc to this computer. i started seeing them everywhere. reflections in the window. shadows in the hallway. the sound of that laugh, quiet, just at the edge of hearing.</p>
+
+  <p>i tried to destroy the disc. i burned it. i broke it into pieces. i threw the pieces into a river. the next morning, the disc was on my kitchen table. whole. no scratches. the marker writing looked fresh.</p>
+
+  <div class="gap"></div>
+
+  <p>i stopped using computers. i threw my phone away. i didn't touch anything with a screen for two years. i thought it was over. i thought i was safe. but last week, i found a piece of paper in my jacket pocket. i don't know how it got there. it had a url written on it. this url. the one you are on right now.</p>
+  
+  <p>i don't know who wrote it. it looks like my handwriting, but i don't remember writing it. i typed it in, just to see. and here i am. writing this.</p>
+
+  <div class="gap"></div>
+
+  <p>i started looking into it. i went to old forums. i found people talking about a disc with the same label. all of them posted once, maybe twice, and then went silent. their accounts deleted. their posts erased. it's like they never existed.</p>
+
+  <p>one guy, his name was mark, he posted a screenshot. it was the same video. the same picture. the same file name. he wrote "it's watching me through the screen. it knows when i close my eyes." that was his last post. 2011. i tried to message him. the account didn't exist. i tried to search for his name. nothing. no obituary. no social media. no records. just a ghost in an archived thread.</p>
+
+  <div class="gap"></div>
+
+  <p>the file is growing. it was 4 megabytes when i found it. now it's 8. i don't know what happens when it reaches a certain size. i don't want to know.</p>
+  
+  <p>i am writing this so that someone knows. if you are reading this, it means you found the page. it means you were looking. why were you looking?</p>
+
+  <p class="dim">(they are here. they are watching. some of them are real. some of them are not.)</p>
+
+  <p>if you want the link, you have to find them. but be careful. not all eyes are real. some are traps. they will take something from you. you only have three chances.</p>
+  
+  <p class="dim">also, the fragments in the text are encrypted. you need to find the shift. look at the date it all began.</p>
+
+  <div class="gap"></div>
+
+  <p>i'm sorry for bringing you into this. i'm sorry i couldn't just keep it to myself. maybe if i had just thrown the disc away. maybe if i had never put it in. maybe if i had just listened to the label.</p>
+  
+  <p>please. just find them. i can't sleep anymore. i can't close my eyes without seeing them. the laugh is getting louder. it's not coming from the speakers anymore. it's coming from inside the walls.</p>
+  
+  <div class="gap"></div>
+
+  <!-- Фрагменты зашифрованы сдвигом на 4 (2009 -> 2+0+0+9 = 11, 1+1 = 2... давай возьмем 4) -->
+  <!-- Если сдвиг 4, то A->E, B->F и т.д. -->
+  <!-- Оригинал: X7K -> Сдвиг 4 -> B7O (X->B, K->O) -->
+  <!-- Оригинал: 9F2 -> Сдвиг 4 -> 9J2 -->
+  <!-- Оригинал: Q4M -> Сдвиг 4 -> U4Q -->
+  <!-- Оригинал: 2009 -> Сдвиг 4 -> 6449 (2->6, 0->4, 0->4, 9->4) - нет, цифры не так шифруются -->
+  
+  <p class="dim">the first part of the code. <span class="fragment" id="frag1">B7O</span></p>
+  <p class="dim">the second part. <span class="fragment" id="frag2">9J2</span></p>
+  <p class="dim">the third part. <span class="fragment" id="frag3">U4Q</span></p>
+  <p class="dim">the fourth part is the date it all began. <span class="fragment" id="frag4">6449</span></p>
+  
+  <div class="gap"></div>
+  <div class="gap"></div>
+
+  <button id="startBtn">i am ready</button>
+  
+  <div class="gap"></div>
+  <div class="gap"></div>
+</div>
+
+<div id="codeForm">
+  <p>enter the 4 decrypted fragments.</p>
+  <div class="input-group">
+    <input type="text" id="in1" maxlength="3" placeholder="---">
+    <input type="text" id="in2" maxlength="3" placeholder="---">
+    <input type="text" id="in3" maxlength="3" placeholder="---">
+    <input type="text" id="in4" maxlength="4" placeholder="----">
+  </div>
+  <button id="submitCodeBtn">submit</button>
+  <div id="errorMsg">wrong. refresh to start over.</div>
+</div>
+
+<div id="finalLink">
+  <p>you found them.</p>
+  <p><a href="https://youtu.be/T0Ydyytm80w" target="_blank" rel="noopener">nohope.avi</a></p>
+  <p class="dim">the video will be published on dec 31, 2026 at 23:00</p>
+</div>
+
+<div id="hud">
+  eyes found: <span id="eyeCount">0</span> / 12<br>
+  lives: <span class="lives" id="livesDisplay">3</span><br>
+  time: <span class="timer" id="timerDisplay">90</span>s<br>
+  <div style="margin-top:10px; font-size:12px; color:#888;">
+    cipher shift: <input type="number" class="cipher-input" id="shiftInput" min="1" max="25" value="0">
+  </div>
+</div>
+
+<div id="deathScreen">
+  <h1>YOU ARE DEAD.</h1>
+  <p>IT TOOK YOUR EYES.</p>
+  <p>TRY AGAIN.</p>
+  <a onclick="location.reload()">reload</a>
+</div>
+
+<div id="copyWarning">DON'T COPY THE TEXT.</div>
+
+<script>
+  document.addEventListener('copy', (e) => {
+    e.preventDefault();
+    const warning = document.getElementById('copyWarning');
+    warning.style.display = 'block';
+    setTimeout(() => warning.style.display = 'none', 1500);
+  });
+  
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'a') e.preventDefault();
+  });
+
+  const startBtn = document.getElementById('startBtn');
+  const story = document.getElementById('story');
+  const hud = document.getElementById('hud');
+  const eyeCountEl = document.getElementById('eyeCount');
+  const livesDisplay = document.getElementById('livesDisplay');
+  const timerDisplay = document.getElementById('timerDisplay');
+  const codeForm = document.getElementById('codeForm');
+  const submitCodeBtn = document.getElementById('submitCodeBtn');
+  const finalLink = document.getElementById('finalLink');
+  const deathScreen = document.getElementById('deathScreen');
+  const shiftInput = document.getElementById('shiftInput');
+
+  let foundCount = 0;
+  let lives = 3;
+  let timeLeft = 90;
+  let activeEyes = []; 
+  let timerInterval;
+  const totalRealEyes = 12;
+  const totalFakeEyes = 6;
+  const totalEyes = totalRealEyes + totalFakeEyes;
+
+  startBtn.addEventListener('click', () => {
+    document.body.classList.add('quest-active');
+    
+    // Запуск таймера
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      timerDisplay.textContent = timeLeft;
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        die();
+      }
+    }, 1000);
+
+    setTimeout(() => {
+      const docHeight = document.body.scrollHeight;
+      
+      // Создаем массив из 18 позиций (12 настоящих, 6 фейков)
+      let eyeTypes = Array(totalRealEyes).fill('real').concat(Array(totalFakeEyes).fill('fake'));
+      // Перемешиваем
+      eyeTypes.sort(() => Math.random() - 0.5);
+
+      for (let i = 0; i < totalEyes; i++) {
+        spawnEye(i, docHeight, eyeTypes[i]);
+      }
+      
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
+  });
+
+  function spawnEye(index, maxHeight, type) {
+    const eye = document.createElement('div');
+    eye.className = 'eye';
+    
+    const left = 5 + Math.random() * 85; 
+    const segmentHeight = maxHeight / totalEyes;
+    const topOffset = segmentHeight * index + (Math.random() * segmentHeight * 0.8);
+    
+    eye.style.left = `${left}%`;
+    eye.style.top = `${topOffset}px`;
+
+    const size = 30 + Math.random() * 30; 
+    eye.style.width = `${size}px`;
+    eye.style.height = `${size}px`;
+    eye.style.animationDelay = `${Math.random() * 2}s`;
+
+    eye.dataset.found = "false";
+    eye.dataset.type = type;
+    
+    eye.addEventListener('click', () => {
+      if (eye.dataset.found === "true") return;
+      
+      if (type === 'fake') {
+        // Фейковый глаз
+        eye.dataset.found = "true";
+        eye.classList.add('fake');
+        lives--;
+        livesDisplay.textContent = lives;
+        if (lives <= 0) die();
+      } else {
+        // Настоящий глаз
+        eye.dataset.found = "true";
+        eye.classList.add('found');
+        foundCount++;
+        eyeCountEl.textContent = foundCount;
+
+        // Открываем фрагменты
+        if (foundCount === 3) document.getElementById('frag1').classList.add('revealed');
+        if (foundCount === 6) document.getElementById('frag2').classList.add('revealed');
+        if (foundCount === 9) document.getElementById('frag3').classList.add('revealed');
+        if (foundCount === 12) {
+          document.getElementById('frag4').classList.add('revealed');
+          setTimeout(() => {
+            codeForm.style.display = 'block';
+            codeForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Останавливаем таймер, так как глаза найдены
+            clearInterval(timerInterval);
+          }, 500);
+        }
+      }
+    });
+
+    activeEyes.push(eye);
+    document.body.appendChild(eye);
+  }
+
+  function die() {
+    clearInterval(timerInterval);
+    deathScreen.style.display = 'flex';
+  }
+
+  // Ввод кода
+  submitCodeBtn.addEventListener('click', () => {
+    let shift = parseInt(shiftInput.value) || 0;
+    
+    // Функция расшифровки
+    function decrypt(str, shift) {
+      if (shift === 0) return str; // Если сдвиг 0, значит не расшифровано
+      return str.split('').map(c => {
+        if (c >= 'A' && c <= 'Z') {
+          let code = c.charCodeAt(0);
+          // Сдвигаем назад (расшифровка)
+          code = ((code - 65 - shift + 26) % 26) + 65;
+          return String.fromCharCode(code);
+        }
+        // Цифры мы не шифровали, но если бы шифровали, тут была бы логика
+        return c; 
+      }).join('');
+    }
+
+    // Что ввели
+    const v1 = document.getElementById('in1').value.trim().toUpperCase();
+    const v2 = document.getElementById('in2').value.trim().toUpperCase();
+    const v3 = document.getElementById('in3').value.trim().toUpperCase();
+    const v4 = document.getElementById('in4').value.trim().toUpperCase();
+    
+    // Что должно быть (расшифровываем то, что в тексте)
+    const p1 = decrypt(document.getElementById('frag1').textContent, shift);
+    const p2 = decrypt(document.getElementById('frag2').textContent, shift);
+    const p3 = decrypt(document.getElementById('frag3').textContent, shift);
+    const p4 = decrypt(document.getElementById('frag4').textContent, shift); 
+
+    // Проверка (для 4-го фрагмента цифры не шифруются, но мы дали зашифрованное 6449)
+    // Оригинальный код: X7K, 9F2, Q4M, 2009
+    if (v1 === p1 && v2 === p2 && v3 === p3 && v4 === '2009') {
+      // УСПЕХ
+      clearInterval(timerInterval);
+      document.body.classList.remove('quest-active');
+      story.style.display = 'none';
+      codeForm.style.display = 'none';
+      hud.style.display = 'none';
+      finalLink.style.display = 'block';
+      window.scrollTo(0, 0);
+    } else {
+      die();
+    }
+  });
+</script>
+</body>
+</html>
